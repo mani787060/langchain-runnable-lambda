@@ -210,9 +210,3 @@ Possible extensions to this project include:
 - Integrating multiple custom Python functions into one pipeline.
 - Exploring `RunnableLambda` with structured dictionary inputs.
 - Building more advanced workflows that combine custom logic with RAG applications.
-
-## Repository
-
-GitHub: https://github.com/mani787060/langchain-runnable-lambda
-
----
