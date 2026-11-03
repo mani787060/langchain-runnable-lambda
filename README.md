@@ -1,52 +1,220 @@
-# LangChain RunnableLambda Custom Logic
-[![LangChain](https://img.shields.io/badge/Framework-LangChain-green)](https://www.langchain.com/)
-[![Python](https://img.shields.io/badge/Python-3.9%2B-blue)](https://www.python.org/)
-[![Logic](https://img.shields.io/badge/Concept-Custom%20Logic-orange)](https://python.langchain.com/docs/expression_language/how_to/functions)
+# LangChain RunnableLambda – Integrating Custom Python Logic into LCEL
 
-## 🏗️ Project Overview
-This repository explores **`RunnableLambda`**, the ultimate flexibility tool within the LangChain Expression Language (LCEL). While LangChain offers excellent built-in components, real-world AI engineering constantly requires custom data manipulation. This project demonstrates how to turn any standard Python function into a "Runnable" that can be piped effortlessly between prompts, models, and parsers.
+![Python](https://img.shields.io/badge/Python-3.9%2B-blue)
+![LangChain](https://img.shields.io/badge/Framework-LangChain-green)
+![Gemini](https://img.shields.io/badge/LLM-Google%20Gemini-orange)
+![Concept](https://img.shields.io/badge/Concept-RunnableLambda-purple)
+
+## Overview
+
+This repository demonstrates how to integrate custom Python functions into **LangChain Expression Language (LCEL)** pipelines using `RunnableLambda`.
+
+LangChain provides several built-in components for creating LLM applications. However, practical AI workflows often require additional Python logic, such as calculating values, transforming text, validating inputs, and processing model outputs.
+
+`RunnableLambda` makes this possible by converting a standard Python function into a LangChain-compatible runnable component.
+
+In this implementation, a Gemini model generates a joke based on a given topic. The generated response is then passed through a parallel processing stage where:
+
+- `RunnablePassthrough` preserves the original generated joke.
+- `RunnableLambda` executes a custom Python function to calculate the word count.
+- `RunnableParallel` combines both outputs into a single dictionary.
+
+The project demonstrates how deterministic Python operations can work alongside LLM-generated responses within a structured LCEL pipeline.
+
+## Key Concepts Demonstrated
+
+### 1. RunnableLambda
+
+`RunnableLambda` wraps a standard Python function and allows it to participate in an LCEL pipeline.
+
+In this project, a custom function calculates the number of words in the generated joke.
+
+```python
+def word_count(text):
+    return len(text.split())
+
+word_count_runnable = RunnableLambda(word_count)
+```
+
+This makes custom Python operations reusable within LangChain workflows.
+
+### 2. RunnablePassthrough
+
+`RunnablePassthrough` forwards the original input without modifying it.
+
+Here, it preserves the generated joke so that the output can contain both the original text and its calculated word count.
+
+```python
+RunnablePassthrough()
+```
+
+### 3. RunnableParallel
+
+`RunnableParallel` executes multiple runnable operations using the same input and collects their results into a dictionary.
+
+```python
+parallel_chain = RunnableParallel({
+    "joke": RunnablePassthrough(),
+    "word_count": RunnableLambda(word_count)
+})
+```
+
+The resulting dictionary contains two outputs:
+
+- `joke`: The original generated text.
+- `word_count`: The number of words in that text.
+
+### 4. RunnableSequence
+
+`RunnableSequence` connects components sequentially, passing the output of one component to the next.
+
+The project uses it to connect the prompt, Gemini model, output parser, and parallel processing stage.
+
+## Workflow Architecture
+
+```text
+User Input (Topic: AI)
+        |
+        v
+   PromptTemplate
+        |
+        v
+   Gemini LLM
+        |
+        v
+   StrOutputParser
+        |
+        v
+  RunnableParallel
+       /      \
+      /        \
+     v          v
+Runnable     Runnable
+Passthrough   Lambda
+     |          |
+     v          v
+ Original    Custom Python
+   Joke       Word Count
+      \        /
+       \      /
+        v    v
+   Combined Dictionary
+        |
+        v
+    Final Output
+```
+
+## Technologies Used
+
+| Technology | Purpose |
+|---|---|
+| Python 3.9+ | Core programming language |
+| LangChain Core | LCEL pipeline orchestration |
+| RunnableLambda | Integrating custom Python functions |
+| RunnableParallel | Parallel runnable execution |
+| RunnablePassthrough | Preserving original input |
+| RunnableSequence | Sequential pipeline composition |
+| Google Gemini | Generating joke content |
+| StrOutputParser | Converting model output into text |
+| python-dotenv | Loading environment variables |
+
+**LLM Model:** `gemini-3.1-flash-lite-preview`
+
+## Project Structure
+
+```text
+langchain-runnable-lambda/
+│
+├── runnable_lambda.py
+├── README.md
+└── .env
+```
+
+## Getting Started
+
+### 1. Clone the Repository
+
+```bash
+git clone https://github.com/mani787060/langchain-runnable-lambda.git
+cd langchain-runnable-lambda
+```
+
+### 2. Create a Virtual Environment
+
+```bash
+python -m venv venv
+```
+
+Activate it:
+
+**Windows:**
+```bash
+venv\Scripts\activate
+```
+
+**macOS/Linux:**
+```bash
+source venv/bin/activate
+```
+
+### 3. Install Dependencies
+
+```bash
+pip install -U langchain-core langchain-google-genai python-dotenv
+```
+
+### 4. Configure Your API Key
+
+Create a `.env` file in the project root:
+
+```env
+GOOGLE_API_KEY=your_gemini_api_key
+```
+
+Keep your API key private. Do not commit `.env` or expose credentials on GitHub.
+
+### 5. Run the Project
+
+```bash
+python runnable_lambda.py
+```
+
+The script sends the topic `AI` to the Gemini model, generates a joke, calculates its word count, and prints both results.
+
+## Expected Output
+
+The exact joke will vary because the response is generated by an LLM. The output follows this general format:
+
+```text
+[Generated joke about AI]
+
+word count - [Calculated word count]
+```
+
+## Learning Outcomes
+
+By exploring this implementation, you can understand:
+
+- How to convert ordinary Python functions into LangChain runnables.
+- How to integrate custom logic into LCEL pipelines.
+- How `RunnableLambda` works with `RunnableParallel`.
+- How to preserve original data using `RunnablePassthrough`.
+- How to combine LLM-generated content with deterministic Python processing.
+- How to structure multi-stage LLM workflows using `RunnableSequence`.
+
+## Future Improvements
+
+Possible extensions to this project include:
+
+- Adding text preprocessing and validation functions.
+- Integrating multiple custom Python functions into one pipeline.
+- Exploring `RunnableLambda` with structured dictionary inputs.
+- Building more advanced workflows that combine custom logic with RAG applications.
+
+## Repository
+
+GitHub: https://github.com/mani787060/langchain-runnable-lambda
 
 ---
 
-## 🛠️ Key Technical Implementations
-
-### 1. The Custom Logic Escape Hatch
-* **Function Wrapping:** Converting standard `def` functions or anonymous `lambda` functions into LCEL-compatible components using `@chain` or `RunnableLambda()`.
-* **Data Sanitization:** Executing a Python function to scrub personally identifiable information (PII) or reformat strings *before* the data reaches the LLM.
-
-### 2. State Dictionary Management
-* **Dictionary Unpacking:** Demonstrating how to write functions that accept the pipeline's dictionary state, extract the necessary keys, compute a result, and return a format the next component expects.
-* **Multi-Step Transformations:** Chaining multiple lambdas together to handle complex preprocessing logic without breaking the readability of the `|` syntax.
-
-### 3. Hybrid AI Systems
-* **Deterministic Meets Probabilistic:** Blending exact Python logic (e.g., calculating a mathematical score or checking string length) with the creative output of the Gemini Pro model within the same execution sequence.
-
----
-
-## 💻 Tech Stack
-* **Language:** Python 3.9+
-* **Orchestration:** LangChain (`langchain-core`, `langchain-google-genai`)
-* **Model:** Google Gemini Pro
-* **Environment:** `python-dotenv`
-
----
-
-## 🚀 Getting Started
-
-1. **Clone the repository:**
-   ```bash
-   git clone [https://github.com/your-username/langchain-runnable-lambda-custom-logic.git](https://github.com/your-username/langchain-runnable-lambda-custom-logic.git)
-
-2. **Install Dependencies:**
-   ```bash
-   pip install -U langchain-core langchain-google-genai python-dotenv
-
-3. **Setup API Key:**
-   Create a .env file in the root directory:
-
-   ```bash
-   GOOGLE_API_KEY=your_gemini_key_here
-
-4. **Run the Implementation:**
-   ```bash
-   python runnable_lambda.py   
+**Learning Focus:** LangChain LCEL, RunnableLambda, custom Python functions, and composable LLM workflows.
