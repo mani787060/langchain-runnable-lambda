@@ -216,5 +216,3 @@ Possible extensions to this project include:
 GitHub: https://github.com/mani787060/langchain-runnable-lambda
 
 ---
-
-**Learning Focus:** LangChain LCEL, RunnableLambda, custom Python functions, and composable LLM workflows.
